@@ -31,7 +31,7 @@ Flexible and performant viewer and analysis tool for groups of time series.
     
     % Alternatively, you can load a previously saved Data struct array from file
     % or import a supported data file (e.g. HEKA).
-    % These commands are also in the File menu.
+    % These commands are also in the UI's File menu.
     obj.loadData('path/to/file');
     obj.importHEKA('path/to/file');
 
