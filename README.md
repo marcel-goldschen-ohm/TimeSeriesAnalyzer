@@ -49,7 +49,7 @@ The time series (x,y) data:
     Data.xdata
     Data.ydata
 
-Axis labels (units should be included within the labels):
+Axis labels (units should be included within the labels, e.g. "Time, sec"):
 
     Data.xlabel
     Data.ylabel
@@ -62,6 +62,8 @@ Associated time series such as idealizations, fits, etc. For compatibility with 
 ---
 ## Supported file formats
 
+* HEKA binary data files
+
 ---
 ## Groups
 
@@ -69,7 +71,7 @@ Associated time series such as idealizations, fits, etc. For compatibility with 
 ## Sweeps
 
 ---
-## Associated Time Series (e.g. idealization, fit, etc.)
+## Associated Named Signals (e.g. yNAME for idealization, fit, etc.)
 
 ---
 ## XAxisROIManager
@@ -88,6 +90,12 @@ Associated time series such as idealizations, fits, etc. For compatibility with 
 
 ---
 ## Incorporation into your own UI
+
+    % Create the UI panel as a child of a parent graphics object.
+    obj = TimeSeriesAnalyzer(parent);
+    
+    % Reparent the UI panel into a new parent graphics object.
+    obj.Parent = parent;
 
 ---
 ## To Do
