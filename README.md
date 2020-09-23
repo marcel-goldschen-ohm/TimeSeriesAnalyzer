@@ -116,7 +116,7 @@ Each time series within a group is referred to as a sweep. The spinbox in the UI
     % Query which sweeps are visible in the UI
     ind = visibleSweeps(); % ind = [2,4]
 
-## Associated Named Signals (e.g. yNAME for idealization, fit, etc.)
+## Associated Named Signals (yNAME)
 Multiple associated signals as defined by all `Data.yNAME` fields can be simultaneously displayed for each sweep. The signals are automatically assigned unique colors according to their index into the array of all signal names returned by `names()`. Signals that are either `cfit` objects, `ppform structs`, or idealizations (i.e. piecewise continuous without noise) are by default shown with a thicker linewidth (see `replot()`).
 
     % !!! Typically you will not call the functions below directly,
