@@ -42,6 +42,22 @@ Just make sure `TimeSeriesAnalyzer.m` and `XAxisROIManager.m` are in your MATLAB
 
 ---
 ## Data structure
+The Data property of the TimeSeriesAnalyzer class is a struct array where each struct in the array contains all of the associated data for a time series.
+
+The time series (x,y) data:
+
+    Data.xdata
+    Data.ydata
+
+Axis labels (units should be included within the labels):
+
+    Data.xlabel
+    Data.ylabel
+
+Associated time series such as idealizations, fits, etc. For compatibility with the viewer the (x,y) data for these signals should have fieldnames with the format `xNAME` and `yNAME`, where `NAME` can be any valid fieldname other than `data` (e.g. `MyData` --> `Data.yMyData`). If `xNAME` does not exist or is empty, the x values default to `xdata`. The UI allows dynamic selection by `NAME` of which signals to view.
+
+    Data.xNAME
+    Data.yNAME
 
 ---
 ## Supported file formats
