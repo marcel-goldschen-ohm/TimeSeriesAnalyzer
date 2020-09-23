@@ -62,6 +62,20 @@ Associated time series such as idealizations, fits, etc. For compatibility with 
     Data.yideal --> Idealization of Data.ydata
     Data.yfit   --> Result of curve fit to Data.ydata
 
+## Command Window access to UI and Data
+
+    % Store a handle to the UI instance for access to everything in the UI
+    obj = TimeSeriesAnalyzer();
+    
+    % Set the xlabel of the 2nd time series
+    obj.Data(2).xlabel = "Time, s";
+    
+    % Update all of the plots in the UI (e.g. if displayed data changes)
+    obj.replot();
+    
+    % Refresh the UI (e.g. if displayed groups/axes change)
+    obj.refresh();
+
 ## Supported file formats
 * HEKA binary data files
 
@@ -123,12 +137,12 @@ Multiple associated signals as defined by all `Data.yNAME` fields can be simulta
 Right-click in an axes for a context menu containing commands to measure properties of all displayed signals in that axes. If ROIs are active, report a separate measurement for each ROI, otherwise report a single measurement for each signal. The result is stored as a table in the `Measurement` property and also printed in the command window.
 
 ## Curve Fitting
-Right-click in an axes for a context menu containing commands to fit all displayed `ydata` signals in that axes. If ROIs are active, the fit error only consideres data within the ROIs, although the fit is still shown for the entire signal. Optionally, you can restrict the fit to be within a single ROI. The result is stored in `Data.xfit` and `Data.yfit`, which will be overwritten each time.
+Right-click in an axes for a context menu containing commands to fit all displayed `ydata` signals in that axes. If ROIs are active, the fit error only consideres data within the ROIs, although the fit is still shown for the entire signal. Optionally, you can restrict the fit to be within a single ROI. The result is stored in `Data.xfit` and `Data.yfit`, which will be overwritten each time. To store multiple fits, the `xfit` and `yfit` fields will need to be copied to new `xNAME` and `yNAME` fields inbetween each fit.
 
 Right-click on a fit line object for a context menu where you can delete the fit or use it to baseline or normalize the associated `ydata`.
 
 ## Data Operations
-Right-click in an axes for a context menu containing commands to mask, zero, interpolate or apply math operations to all displayed signals. If ROIs are active, only apply the operation within each ROI, otherwise apply it to the entire signal.
+Right-click in an axes for a context menu containing commands to mask, zero, interpolate or apply math operations to all displayed signals in that axes. If ROIs are active, only apply the operation within each ROI, otherwise apply it to the entire signal.
 
 ## Idealization of piecewise continuous signals
 
