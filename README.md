@@ -20,20 +20,22 @@ Flexible and performant viewer and analysis tool for groups of time series.
 ![User Interface](TimeSeriesAnalyzer.png "User Interface")
 
 ## Basic Usage
-    % This will create a new figure and put the UI panel in it.
-    obj = TimeSeriesAnalyzer();
-    
-    % Supply some data in one of the following forms:
-    % - a compatible struct array (see description of Data below)
-    % - [x y] or [y] data array
-    % - cell array of [x y] or [y] data arrays
-    obj.setData(...);
-    
-    % Alternatively, you can load a previously saved Data struct array from file
-    % or import a supported data file (e.g. HEKA).
-    % These commands are also in the UI's File menu.
-    obj.loadData('path/to/file');
-    obj.importHEKA('path/to/file');
+```Matlab
+% This will create a new figure and put the UI panel in it.
+obj = TimeSeriesAnalyzer();
+
+% Supply some data in one of the following forms:
+% - a compatible struct array (see description of Data below)
+% - [x y] or [y] data array
+% - cell array of [x y] or [y] data arrays
+obj.setData(...);
+
+% Alternatively, you can load a previously saved Data struct array from file
+% or import a supported data file (e.g. HEKA).
+% These commands are also in the UI's File menu.
+obj.loadData('path/to/file');
+obj.importHEKA('path/to/file');
+```
 
 ## Install
 Just make sure `TimeSeriesAnalyzer.m` and `XAxisROIManager.m` are in your MATLAB path.
@@ -63,21 +65,22 @@ Associated time series such as idealizations, fits, etc. For compatibility with 
     Data.yfit   --> Result of curve fit to Data.ydata
 
 ## Command Window access to UI and Data
+```Matlab
+ % Store a handle to the UI instance for access to everything in the UI
+ obj = TimeSeriesAnalyzer();
 
-    % Store a handle to the UI instance for access to everything in the UI
-    obj = TimeSeriesAnalyzer();
-    
-    % Set the xlabel of the 2nd time series
-    obj.Data(2).xlabel = "Time, s";
-    
-    % Set the xlabel for all time series
-    [obj.Data.xlabel] = deal("Time, s");
-    
-    % Update all of the plots in the UI (e.g. if displayed data changes)
-    obj.replot();
-    
-    % Refresh the UI (e.g. if displayed groups/axes change)
-    obj.refresh();
+ % Set the xlabel of the 2nd time series
+ obj.Data(2).xlabel = "Time, s";
+
+ % Set the xlabel for all time series
+ [obj.Data.xlabel] = deal("Time, s");
+
+ % Update all of the plots in the UI (e.g. if displayed data changes)
+ obj.replot();
+
+ % Refresh the UI (e.g. if displayed groups/axes change)
+ obj.refresh();
+ ```
 
 ## Supported file formats
 * HEKA binary data files
@@ -85,54 +88,60 @@ Associated time series such as idealizations, fits, etc. For compatibility with 
 ## Groups
 Time series structs in `Data` are grouped according to the field `Data.group`. Each group is displayed in its own axes which are arranged vertically in the UI. The x-axis limits for all group axes are linked to maintain their temporal alignment when zoomed. The user can dynamically select a subset of groups to display in the UI (see the Group menu). The group label is the `ylabel` of the first time series in the group. Setting the group label sets the `ylabel` of all time series in the group.
 
-    % !!! Typically you will not call the functions below directly,
-    %     but use the UI's Group menu to assign groups and group labels.
-    
-    % Split six time series into three groups
-    setGroups([1,2,3,1,2,3]);
-    setGroups([1,2,3]); % does the same as above
-    
-    % Query the current group indices
-    ind = groups(); % ind = [1,2,3,1,2,3]
-    
-    % Set the ylabel of all time series in each group
-    setGroupLabels(["Current, pA", "Voltage, mV", "Temperature, C"]);
-    
-    % Query the group labels
-    labels = groupLabels(); % labels = ["Current, pA", "Voltage, mV", "Temperature, C"]
-    
-    % Only show the 1st and 3rd group (Current and Temperature) in the UI
-    setVisibleGroups([1,3]);
-    
-    % Query which groups are visible in the UI
-    ind = visibleGroups(); % ind = [1,3]
+```Matlab
+ % !!! Typically you will not call the functions below directly,
+ %     but use the UI's Group menu to assign groups and group labels.
+
+ % Split six time series into three groups
+ setGroups([1,2,3,1,2,3]);
+ setGroups([1,2,3]); % does the same as above
+
+ % Query the current group indices
+ ind = groups(); % ind = [1,2,3,1,2,3]
+
+ % Set the ylabel of all time series in each group
+ setGroupLabels(["Current, pA", "Voltage, mV", "Temperature, C"]);
+
+ % Query the group labels
+ labels = groupLabels(); % labels = ["Current, pA", "Voltage, mV", "Temperature, C"]
+
+ % Only show the 1st and 3rd group (Current and Temperature) in the UI
+ setVisibleGroups([1,3]);
+
+ % Query which groups are visible in the UI
+ ind = visibleGroups(); % ind = [1,3]
+ ```
 
 ## Sweeps
 Each time series within a group is referred to as a sweep. The spinbox in the UI above the plots allows specifying which sweeps are visible and traversal across the sweeps.
 
-    % !!! Typically you will not call the functions below directly,
-    %     but instead use the sweeps spinbox in the UI above the plots.
-    
-    % Show only the 2nd and 4th time series within each group
-    setVisibleSweeps([2,4]);
-    
-    % Query which sweeps are visible in the UI
-    ind = visibleSweeps(); % ind = [2,4]
+```Matlab
+ % !!! Typically you will not call the functions below directly,
+ %     but instead use the sweeps spinbox in the UI above the plots.
+
+ % Show only the 2nd and 4th time series within each group
+ setVisibleSweeps([2,4]);
+
+ % Query which sweeps are visible in the UI
+ ind = visibleSweeps(); % ind = [2,4]
+ ```
 
 ## Associated yNAME Signals
 Multiple associated signals as defined by all `Data.yNAME` fields can be simultaneously displayed for each sweep. The signals are automatically assigned unique colors according to their index into the array of all signal names returned by `names()`. Signals that are either `cfit` objects, `ppform structs`, or idealizations (i.e. piecewise continuous without noise) are by default shown with a thicker linewidth (see `replot()`).
 
-    % !!! Typically you will not call the functions below directly,
-    %     but instead use the UI's View menu to select which data to show.
-    
-    % For Data with fields ydata, yraw, yideal, yfit and yspecial:
-    strs = names(); % strs = ["raw","data","ideal","fit","special"]
-    
-    % Only show Data.ydata and Data.yideal in the UI
-    setVisibleNames(["data","ideal"]);
-    
-    % Query visible signals
-    names = visibleNames(); % names = ["data","ideal"]
+```Matlab
+ % !!! Typically you will not call the functions below directly,
+ %     but instead use the UI's View menu to select which data to show.
+
+ % For Data with fields ydata, yraw, yideal, yfit and yspecial:
+ strs = names(); % strs = ["raw","data","ideal","fit","special"]
+
+ % Only show Data.ydata and Data.yideal in the UI
+ setVisibleNames(["data","ideal"]);
+
+ % Query visible signals
+ names = visibleNames(); % names = ["data","ideal"]
+ ```
 
 ## XAxisROIManager
 
@@ -154,12 +163,13 @@ Right-click in an axes for a context menu containing commands to mask, zero, int
 * MDL (requires [Scan_for_breaks](https://www.mathworks.com/matlabcentral/fileexchange/60224-scan_for_breaks?s_tid=prof_contriblnk) by Jacob Dreyer)
 
 ## Incorporation into your own UI
+```Matlab
+ % Create the UI panel as a child of a parent graphics object.
+ obj = TimeSeriesAnalyzer(parent);
 
-    % Create the UI panel as a child of a parent graphics object.
-    obj = TimeSeriesAnalyzer(parent);
-    
-    % Reparent the UI panel into a new parent graphics object.
-    obj.Parent = parent;
+ % Reparent the UI panel into a new parent graphics object.
+ obj.Parent = parent;
+ ```
 
 ## To Do
 
