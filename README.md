@@ -144,6 +144,33 @@ Multiple associated signals as defined by all `Data.yNAME` fields can be simulta
  ```
 
 ## XAxisROIManager
+The `[]` toggle button in the UI above the plots defines whether ROIs are active/enabled. While active, left-click and drag in the plot axes to draw an ROI, and current ROIs can be moved/resized interactively as well. By default drawing a new ROI removes all prior ROIs. To draw multiple ROIs hold the shift key while drawing new ROIs (or draw using a middle-click). Deactivating ROIs via the toggle button will hide them, but not remove them. It doesn't matter which axes you draw an ROI in, it will be automatically propogated to all group axes (i.e. the ROIs are shared across groups). While active, additional menu options are available in the axes context menu, some of which depend on whether the menu was created by right-clicking inside or outside of an ROI. The toggle button also displays the current number of ROIs, e.g. `[3]`.
+
+The `XAxisROIManager` class can also be used separately with any plot axes. However, some behavior like shift-click to draw multiple is only defined in the `TimeSeriesAnalyzer` class. By default, you always draw multiple, and must explicitly delete ROIs via their context menu.
+
+```Matlab
+xmgr = XAxisROIManager();
+
+% Assign a list of plot axes across which ROIs should be managed and shared
+xmgr.Axes = [gca someOtherAxesHandle];
+
+% Click and drag to draw a ROI in the current axes.
+% It will automatically be copied to all other managed axes.
+xmgr.addROI();
+
+% Drag to draw a ROI in the current axes with one edge at x0.
+% It will automatically be copied to all other managed axes.
+xmgr.addROI(x0);
+
+% Programatically add an ROI with limits [xmin xmax]
+xmgr.addROI([xmin xmax]);
+
+% Get all ROI limits as an Mx2 matrix of [xmin xmax] for each of M ROIs
+xlims = xmgr.XLims;
+
+% Programatically set all ROIs
+xmgr.XLims = [...]; % input Mx2 matrix of [xmin xmax] for each of M ROIs
+```
 
 ## Measurement
 Right-click in an axes for a context menu containing commands to measure properties of all displayed signals in that axes. If ROIs are active, report a separate measurement for each ROI, otherwise report a single measurement for each signal. The result is stored as a table in the `Measurement` property and also printed in the command window.
