@@ -35,3 +35,48 @@ Flexible and performant viewer and analysis tool for groups of time series.
     % These commands are also in the File menu.
     obj.loadData('path/to/file');
     obj.importHEKA('path/to/file');
+
+---
+## Install
+Just make sure `TimeSeriesAnalyzer.m` and `XAxisROIManager.m` are in your MATLAB path.
+
+---
+## Data structure
+
+---
+## Supported file formats
+
+---
+## Groups
+
+---
+## Sweeps
+
+---
+## Associated Time Series (e.g. idealization, fit, etc.)
+
+---
+## XAxisROIManager
+
+---
+## Measurement
+
+---
+## Curve Fitting
+
+---
+## Data Operations
+
+---
+## Idealization of piecewise continuous signals
+
+---
+## Incorporation into your own UI
+
+---
+## To Do
+
+* Make available as MATLAB Add-On
+* Join Idealization
+* Gaussian Filter
+* Import Axon, Axograph
