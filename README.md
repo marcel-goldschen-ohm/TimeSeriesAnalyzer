@@ -70,6 +70,9 @@ Associated time series such as idealizations, fits, etc. For compatibility with 
     % Set the xlabel of the 2nd time series
     obj.Data(2).xlabel = "Time, s";
     
+    % Set the xlabel for all time series
+    [obj.Data.xlabel] = deal("Time, s");
+    
     % Update all of the plots in the UI (e.g. if displayed data changes)
     obj.replot();
     
