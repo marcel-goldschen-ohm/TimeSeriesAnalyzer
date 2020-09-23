@@ -19,7 +19,6 @@ Flexible and performant viewer and analysis tool for groups of time series.
 
 ![User Interface](TimeSeriesAnalyzer.png "User Interface")
 
----
 ## Basic Usage
     % This will create a new figure and put the UI panel in it.
     obj = TimeSeriesAnalyzer();
@@ -36,11 +35,9 @@ Flexible and performant viewer and analysis tool for groups of time series.
     obj.loadData('path/to/file');
     obj.importHEKA('path/to/file');
 
----
 ## Install
 Just make sure `TimeSeriesAnalyzer.m` and `XAxisROIManager.m` are in your MATLAB path.
 
----
 ## Data structure
 The Data property of the TimeSeriesAnalyzer class is a struct array where each struct in the array contains all of the associated data for a time series.
 
@@ -65,11 +62,9 @@ Associated time series such as idealizations, fits, etc. For compatibility with 
     Data.yideal --> Idealization of Data.ydata
     Data.yfit   --> Result of curve fit to Data.ydata
 
----
 ## Supported file formats
 * HEKA binary data files
 
----
 ## Groups
 Time series structs in `Data` are grouped according to the field `Data.group`. Each group is displayed in its own axes which are arranged vertically in the UI. The x-axis limits for all group axes are linked to maintain their temporal alignment when zoomed. The user can dynamically select a subset of groups to display in the UI (see the Group menu). The group label is the `ylabel` of the first time series in the group. Setting the group label sets the `ylabel` of all time series in the group.
 
@@ -95,7 +90,6 @@ Time series structs in `Data` are grouped according to the field `Data.group`. E
     % Query which groups are visible in the UI
     ind = visibleGroups(); % ind = [1,3]
 
----
 ## Sweeps
 Each time series within a group is referred to as a sweep. The spinbox in the UI above the plots allows specifying which sweeps are visible and traversal across the sweeps.
 
@@ -108,7 +102,6 @@ Each time series within a group is referred to as a sweep. The spinbox in the UI
     % Query which sweeps are visible in the UI
     ind = visibleSweeps(); % ind = [2,4]
 
----
 ## Associated Named Signals (e.g. yNAME for idealization, fit, etc.)
 Multiple associated signals as defined by all `Data.yNAME` fields can be simultaneously displayed for each sweep. The signals are automatically assigned unique colors according to their index into the array of all signal names returned by `names()`. Signals that are either `cfit` objects, `ppform structs`, or idealizations (i.e. piecewise continuous without noise) are by default shown with a thicker linewidth (see `replot()`).
 
@@ -124,27 +117,21 @@ Multiple associated signals as defined by all `Data.yNAME` fields can be simulta
     % Query visible signals
     names = visibleNames(); % names = ["data","ideal"]
 
----
 ## XAxisROIManager
 
----
 ## Measurement
 Right-click in an axes for a context menu containing commands to measure properties of all displayed signals in that axes. If ROIs are active, report a separate measurement for each ROI, otherwise report a single measurement for each signal. The result is stored as a table in the `Measurement` property and also printed in the command window.
 
----
 ## Curve Fitting
 Right-click in an axes for a context menu containing commands to fit all displayed `ydata` signals in that axes. If ROIs are active, the fit error only consideres data within the ROIs, although the fit is still shown for the entire signal. Optionally, you can restrict the fit to be within a single ROI. The result is stored in `Data.xfit` and `Data.yfit`, which will be overwritten each time.
 
 Right-click on a fit line object for a context menu where you can delete the fit or use it to baseline or normalize the associated `ydata`.
 
----
 ## Data Operations
 Right-click in an axes for a context menu containing commands to mask, zero, interpolate or apply math operations to all displayed signals. If ROIs are active, only apply the operation within each ROI, otherwise apply it to the entire signal.
 
----
 ## Idealization of piecewise continuous signals
 
----
 ## Incorporation into your own UI
 
     % Create the UI panel as a child of a parent graphics object.
@@ -153,7 +140,6 @@ Right-click in an axes for a context menu containing commands to mask, zero, int
     % Reparent the UI panel into a new parent graphics object.
     obj.Parent = parent;
 
----
 ## To Do
 
 * Make available as MATLAB Add-On
