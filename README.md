@@ -13,7 +13,25 @@ Flexible and performant viewer and analysis tool for groups of time series.
 * Curve fitting.
 * Mask, zero, interpolate, or apply basic mathematical operations.
 * Simple idealization of piecewise continuous signals.
+* Import other time series data files (e.g. HEKA).
 * Simple, flexible and easily extended underlying `struct array` data structure.
 * Entire UI is in a single `uipanel` and is easily reparented into your own custom UI.
 
 ![User Interface](TimeSeriesAnalyzer.png "User Interface")
+
+---
+## Basic Usage
+    % This will create a new figure and put the UI panel in it.
+    obj = TimeSeriesAnalyzer();
+    
+    % Supply some data in one of the following forms:
+    % - a compatible struct array (see description of Data below)
+    % - [x y] or [y] data array
+    % - cell array of [x y] or [y] data arrays
+    obj.setData(...);
+    
+    % Alternatively, you can load a previously saved Data struct array from file
+    % or import a supported data file (e.g. HEKA).
+    % These commands are also in the File menu.
+    obj.loadData('path/to/file');
+    obj.importHEKA('path/to/file');
