@@ -59,31 +59,87 @@ Associated time series such as idealizations, fits, etc. For compatibility with 
     Data.xNAME
     Data.yNAME
 
+!!! Note, the UI treats the following `NAME`s specially, and they should be avoided for anything other than their intended use:
+
+    Data.yraw   --> Original unmodified copy of Data.ydata
+    Data.yideal --> Idealization of Data.ydata
+    Data.yfit   --> Result of curve fit to Data.ydata
+
 ---
 ## Supported file formats
-
 * HEKA binary data files
 
 ---
 ## Groups
+Time series structs in `Data` are grouped according to the field `Data.group`. Each group is displayed in its own axes which are arranged vertically in the UI. The x-axis limits for all group axes are linked to maintain their temporal alignment when zoomed. The user can dynamically select a subset of groups to display in the UI (see the Group menu). The group label is the `ylabel` of the first time series in the group. Setting the group label sets the `ylabel` of all time series in the group.
+
+    % !!! Typically you will not call the functions below directly,
+    %     but use the UI's Group menu to assign groups and group labels.
+    
+    % Split six time series into three groups
+    setGroups([1,2,3,1,2,3]);
+    setGroups([1,2,3]); % does the same as above
+    
+    % Query the current group indices
+    ind = groups(); % ind = [1,2,3,1,2,3]
+    
+    % Set the ylabel of all time series in each group
+    setGroupLabels(["Current, pA", "Voltage, mV", "Temperature, C"]);
+    
+    % Query the group labels
+    labels = groupLabels(); % labels = ["Current, pA", "Voltage, mV", "Temperature, C"]
+    
+    % Only show the 1st and 3rd group (Current and Temperature) in the UI
+    setVisibleGroups([1,3]);
+    
+    % Query which groups are visible in the UI
+    ind = visibleGroups(); % ind = [1,3]
 
 ---
 ## Sweeps
+Each time series within a group is referred to as a sweep. The spinbox in the UI above the plots allows specifying which sweeps are visible and traversal across the sweeps.
+
+    % !!! Typically you will not call the functions below directly,
+    %     but instead use the sweeps spinbox in the UI above the plots.
+    
+    % Show only the 2nd and 4th time series within each group
+    setVisibleSweeps([2,4]);
+    
+    % Query which sweeps are visible in the UI
+    ind = visibleSweeps(); % ind = [2,4]
 
 ---
 ## Associated Named Signals (e.g. yNAME for idealization, fit, etc.)
+Multiple associated signals as defined by all `Data.yNAME` fields can be simultaneously displayed for each sweep. The signals are automatically assigned unique colors according to their index into the array of all signal names returned by `names()`. Signals that are either `cfit` objects, `ppform structs`, or idealizations (i.e. piecewise continuous without noise) are by default shown with a thicker linewidth (see `replot()`).
+
+    % !!! Typically you will not call the functions below directly,
+    %     but instead use the UI's View menu to select which data to show.
+    
+    % For Data with fields ydata, yraw, yideal, yfit and yspecial:
+    strs = names(); % strs = ["raw","data","ideal","fit","special"]
+    
+    % Only show Data.ydata and Data.yideal in the UI
+    setVisibleNames(["data","ideal"]);
+    
+    % Query visible signals
+    names = visibleNames(); % names = ["data","ideal"]
 
 ---
 ## XAxisROIManager
 
 ---
 ## Measurement
+Right-click in an axes for a context menu containing commands to measure properties of all displayed signals in that axes. If ROIs are active, report a separate measurement for each ROI, otherwise report a single measurement for each signal. The result is stored as a table in the `Measurement` property and also printed in the command window.
 
 ---
 ## Curve Fitting
+Right-click in an axes for a context menu containing commands to fit all displayed `ydata` signals in that axes. If ROIs are active, the fit error only consideres data within the ROIs, although the fit is still shown for the entire signal. Optionally, you can restrict the fit to be within a single ROI. The result is stored in `Data.xfit` and `Data.yfit`, which will be overwritten each time.
+
+Right-click on a fit line object for a context menu where you can delete the fit or use it to baseline or normalize the associated `ydata`.
 
 ---
 ## Data Operations
+Right-click in an axes for a context menu containing commands to mask, zero, interpolate or apply math operations to all displayed signals. If ROIs are active, only apply the operation within each ROI, otherwise apply it to the entire signal.
 
 ---
 ## Idealization of piecewise continuous signals
@@ -101,6 +157,8 @@ Associated time series such as idealizations, fits, etc. For compatibility with 
 ## To Do
 
 * Make available as MATLAB Add-On
+* Revert to raw function
 * Join Idealization
 * Gaussian Filter
+* Save fit with unique name so it is not overwritten by subsequent fit
 * Import Axon, Axograph
