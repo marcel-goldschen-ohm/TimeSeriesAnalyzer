@@ -1,5 +1,5 @@
 # TimeSeriesAnalyzer
-Flexible and performant viewer and analysis tool for groups of time series.
+Flexible and performant MATLAB viewer and analysis tool for groups of time series.
 
 * Flexible grouping of multiple time series (e.g. recordings in multiple channels).
 * Fast plotting of HUGE time series (requires Jim Hokanson's [plotBig_Matlab](https://github.com/JimHokanson/plotBig_Matlab)).
