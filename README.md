@@ -152,7 +152,7 @@ Multiple associated signals as defined by all `Data.yNAME` fields can be simulta
 ## XAxisROIManager
 The `[]` toggle button in the UI above the plots defines whether ROIs are active/enabled. While active, left-click and drag in the plot axes to draw an ROI, and current ROIs can be moved/resized interactively as well. By default drawing a new ROI removes all prior ROIs. To draw multiple ROIs hold the shift key while drawing new ROIs (or draw using a middle-click). Deactivating ROIs via the toggle button will hide them, but not remove them. It doesn't matter which axes you draw an ROI in, it will be automatically propogated to all group axes (i.e. the ROIs are shared across groups). While active, additional menu options are available in the axes context menu, some of which depend on whether the menu was created by right-clicking inside or outside of an ROI. The toggle button also displays the current number of ROIs, e.g. `[3]`.
 
-![ROIs Button](images/ROIsButton.png "ROIs Button")
+![ROIs Button](images/ROIsButtonAndMenu.png "ROIs Button")
 
 The `XAxisROIManager` class can also be used separately with any plot axes. However, some behavior like shift-click to draw multiple is only defined in the `TimeSeriesAnalyzer` class. By default, you always draw multiple, and must explicitly delete ROIs via their context menu.
 
@@ -183,8 +183,12 @@ xmgr.XLims = [...]; % input Mx2 matrix of [xmin xmax] for each of M ROIs
 ## Measurement
 Right-click in an axes for a context menu containing commands to measure properties of all displayed signals in that axes. If ROIs are active, report a separate measurement for each ROI, otherwise report a single measurement for each signal. The result is stored as a table in the `Measurement` property and also printed in the command window.
 
+![Measure Menu](images/MeasureMenu.png "Measure Menu")
+
 ## Curve Fitting
 Right-click in an axes for a context menu containing commands to fit all displayed `ydata` signals in that axes. If ROIs are active, the fit error only consideres data within the ROIs, although the fit is still shown for the entire signal. Optionally, you can restrict the fit to be within a single ROI. The result is stored in `Data.xfit` and `Data.yfit`, which will be overwritten each time. To store multiple fits, the `xfit` and `yfit` fields will need to be copied to new `xNAME` and `yNAME` fields inbetween each fit.
+
+![Fit Menu](images/FitMenu.png "Fit Menu")
 
 Right-click on a fit line object for a context menu where you can delete the fit or use it to baseline or normalize the associated `ydata`.
 
