@@ -203,6 +203,8 @@ Right-click in an axes for a context menu containing commands to mask, zero, int
 * DISC (requires [DISC](https://github.com/ChandaLab/DISC))
 * MDL (requires [Scan_for_breaks](https://www.mathworks.com/matlabcentral/fileexchange/60224-scan_for_breaks?s_tid=prof_contriblnk) by Jacob Dreyer)
 
+![Idealize Menu](images/IdealizeMenu.png "Idealize Menu")
+
 ## Incorporation into your own UI
 ```Matlab
  % Create the UI panel as a child of a parent graphics object.
