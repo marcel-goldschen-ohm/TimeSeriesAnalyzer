@@ -16,6 +16,7 @@ Flexible and performant MATLAB viewer and analysis tool for groups of time serie
 * Import other time series data files (e.g. HEKA).
 * Simple, flexible and easily extended underlying `struct array` data structure.
 * Entire UI is in a single `uipanel` and is easily reparented into your own custom UI.
+* Does NOT handle date formats. Strictly numeric x-axis values only.
 
 ![User Interface](images/TimeSeriesAnalyzer.png "User Interface")
 
