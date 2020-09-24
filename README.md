@@ -2,7 +2,7 @@
 Flexible and performant MATLAB viewer and analysis tool for groups of time series.
 
 * Flexible grouping of multiple time series (e.g. recordings in multiple channels).
-* Fast plotting of HUGE time series (requires Jim Hokanson's [plotBig_Matlab](https://github.com/JimHokanson/plotBig_Matlab)).
+* Fast plotting of HUGE time series (requires [plotBig_Matlab](https://github.com/JimHokanson/plotBig_Matlab) by Jim Hokanson).
 * Overlay each time series with any number of associated time series (e.g. idealization, fit, etc.)
     * A simple naming scheme allows the user to add an arbitrary number of these signals to the data.
 * Dynamic selection of groups/data to visualize and traversal across time series within each group.
@@ -84,7 +84,7 @@ Associated time series such as idealizations, fits, etc. For compatibility with 
  ```
 
 ## Supported file formats
-* HEKA binary data files
+* HEKA binary data files (requires [HEKA Patchmaster Importer Add-On](https://www.mathworks.com/matlabcentral/fileexchange/70164-heka-patchmaster-importer) by Christian Keine)
 
 ## Groups
 Time series structs in `Data` are grouped according to the field `Data.group`. Each group is displayed in its own axes which are arranged vertically in the UI. The x-axis limits for all group axes are linked to maintain their temporal alignment when zoomed. The user can dynamically select a subset of groups to display in the UI (see the Group menu). The group label is the `ylabel` of the first time series in the group. Setting the group label sets the `ylabel` of all time series in the group.
