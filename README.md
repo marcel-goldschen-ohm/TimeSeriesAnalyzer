@@ -17,7 +17,7 @@ Flexible and performant viewer and analysis tool for groups of time series.
 * Simple, flexible and easily extended underlying `struct array` data structure.
 * Entire UI is in a single `uipanel` and is easily reparented into your own custom UI.
 
-![User Interface](TimeSeriesAnalyzer.png "User Interface")
+![User Interface](images/TimeSeriesAnalyzer.png "User Interface")
 
 ## Basic Usage
 ```Matlab
@@ -88,6 +88,8 @@ Associated time series such as idealizations, fits, etc. For compatibility with 
 ## Groups
 Time series structs in `Data` are grouped according to the field `Data.group`. Each group is displayed in its own axes which are arranged vertically in the UI. The x-axis limits for all group axes are linked to maintain their temporal alignment when zoomed. The user can dynamically select a subset of groups to display in the UI (see the Group menu). The group label is the `ylabel` of the first time series in the group. Setting the group label sets the `ylabel` of all time series in the group.
 
+![Group Menu](images/GroupMenu.png "Group Menu")
+
 ```Matlab
  % !!! Typically you will not call the functions below directly,
  %     but use the UI's Group menu to assign groups and group labels.
@@ -115,6 +117,8 @@ Time series structs in `Data` are grouped according to the field `Data.group`. E
 ## Sweeps
 Each time series within a group is referred to as a sweep. The spinbox in the UI above the plots allows specifying which sweeps are visible and traversal across the sweeps.
 
+![Sweeps Spinbox](images/SweepsSpinbox.png "Sweeps Spinbox")
+
 ```Matlab
  % !!! Typically you will not call the functions below directly,
  %     but instead use the sweeps spinbox in the UI above the plots.
@@ -128,6 +132,8 @@ Each time series within a group is referred to as a sweep. The spinbox in the UI
 
 ## Associated yNAME Signals
 Multiple associated signals as defined by all `Data.yNAME` fields can be simultaneously displayed for each sweep. The signals are automatically assigned unique colors according to their index into the array of all signal names returned by `names()`. Signals that are either `cfit` objects, `ppform structs`, or idealizations (i.e. piecewise continuous without noise) are by default shown with a thicker linewidth (see `replot()`).
+
+![View Menu](images/ViewMenu.png "View Menu")
 
 ```Matlab
  % !!! Typically you will not call the functions below directly,
@@ -145,6 +151,8 @@ Multiple associated signals as defined by all `Data.yNAME` fields can be simulta
 
 ## XAxisROIManager
 The `[]` toggle button in the UI above the plots defines whether ROIs are active/enabled. While active, left-click and drag in the plot axes to draw an ROI, and current ROIs can be moved/resized interactively as well. By default drawing a new ROI removes all prior ROIs. To draw multiple ROIs hold the shift key while drawing new ROIs (or draw using a middle-click). Deactivating ROIs via the toggle button will hide them, but not remove them. It doesn't matter which axes you draw an ROI in, it will be automatically propogated to all group axes (i.e. the ROIs are shared across groups). While active, additional menu options are available in the axes context menu, some of which depend on whether the menu was created by right-clicking inside or outside of an ROI. The toggle button also displays the current number of ROIs, e.g. `[3]`.
+
+![ROIs Button](images/ROIsButton.png "ROIs Button")
 
 The `XAxisROIManager` class can also be used separately with any plot axes. However, some behavior like shift-click to draw multiple is only defined in the `TimeSeriesAnalyzer` class. By default, you always draw multiple, and must explicitly delete ROIs via their context menu.
 
