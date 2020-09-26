@@ -162,6 +162,9 @@ The `[]` toggle button in the UI above the plots defines whether ROIs are active
 The `XAxisROIManager` class can also be used separately with any plot axes. However, some behavior like shift-click to draw multiple is only defined in the `TimeSeriesAnalyzer` class. By default, you always draw multiple, and must explicitly delete ROIs via their context menu.
 
 ```Matlab
+ % !!! This is ONLY for when you want to use the XAxisROIManager
+ %     stand alone with your own plot axes.
+ 
 xmgr = XAxisROIManager();
 
 % Assign a list of plot axes across which ROIs should be managed and shared
