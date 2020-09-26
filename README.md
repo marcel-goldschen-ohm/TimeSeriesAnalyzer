@@ -222,7 +222,6 @@ Right-click in an axes for a context menu containing commands to mask, zero, int
 ## To Do
 
 * Make available as MATLAB Add-On
-* Waitbar for idealization
 * Revert to raw function
 * Join Idealization
 * Gaussian Filter
