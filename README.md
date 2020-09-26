@@ -120,7 +120,7 @@ Time series structs in `Data` are grouped according to the field `Data.group`. E
  ```
 
 ## Sweeps
-Each time series within a group is referred to as a sweep. The spinbox in the UI above the plots allows specifying which sweeps are visible and traversal across the sweeps.
+Each time series within a group is referred to as a sweep. The spinbox in the UI above the plots allows specifying which sweeps are visible and traversal across the sweeps. You can enter multiple sweeps in the sweeps spinbox in a format compatible with MATLAB index arrays (e.g. "1 3,7:9").
 
 ![Sweeps Spinbox](images/SweepsSpinbox.png "Sweeps Spinbox")
 
