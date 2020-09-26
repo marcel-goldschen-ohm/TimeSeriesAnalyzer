@@ -422,6 +422,28 @@ classdef TimeSeriesAnalyzer < handle
             obj.refresh();
         end
         
+        % Revert to original raw data (yraw)
+        function revertToRaw(obj, tsi)
+            if ~isfield(obj.Data, 'yraw')
+                return
+            end
+            if ~exist('tsi', 'var') || isempty(tsi)
+                tsi = 1:numel(obj.Data);
+            end
+            for i = 1:numel(tsi)
+                j = tsi(i);
+                [x,y] = obj.getXY(obj.Data(j), "raw");
+                if ~isempty(y) && numel(x) == numel(y)
+                    obj.Data(j).xdata = x;
+                    obj.Data(j).ydata = y;
+                end
+            end
+        end
+        function revertToRawAllVisibleInAxes(obj, ax)
+            tsi = obj.visibleTsInAxes(ax);
+            obj.revertToRaw(tsi);
+        end
+        
         %------------------------------------------------------------------
         % File I/O
         %------------------------------------------------------------------
@@ -693,6 +715,13 @@ classdef TimeSeriesAnalyzer < handle
             group = find(visGroups == axi, 1);
         end
         
+        % Indices of time series in axes (each axes corresponds to a group)
+        function tsi = tsInAxes(obj, ax)
+            group = obj.axesGroupIndex(ax);
+            tsi = obj.tsPerGroup();
+            tsi = tsi{group};
+        end
+        
         %------------------------------------------------------------------
         % Labels
         %------------------------------------------------------------------
@@ -934,6 +963,13 @@ classdef TimeSeriesAnalyzer < handle
                 vis = intersect(1:numel(tsi{i}), visSweeps);
                 tsi{i} = tsi{i}(vis);
             end
+        end
+        
+        % Indices of visible time series in axes
+        function tsi = visibleTsInAxes(obj, ax)
+            group = obj.axesGroupIndex(ax);
+            tsi = obj.visibleTsPerGroup();
+            tsi = tsi{group};
         end
         
         %------------------------------------------------------------------
@@ -1456,6 +1492,11 @@ classdef TimeSeriesAnalyzer < handle
                 uimenu(roisMenu, 'Text', 'Merge Overlapping ROIs', ...
                     'MenuSelectedFc', @(varargin) obj.mergeOverlappingXROIs());
             end
+            
+            % Revert to raw
+            uimenu(roisMenu, 'Text', 'Revert to Raw', ...
+                'Separator', true, ...
+                'MenuSelectedFc', @(varargin) obj.revertToRawAllVisibleInAxes(ax));
         end
         function menu = histAxesContextMenu(obj, ax)
             menu = uicontextmenu(obj.ui.Figure);
@@ -1742,6 +1783,9 @@ classdef TimeSeriesAnalyzer < handle
                 'MenuSelectedFc', @(varargin) obj.editGroupLabels());
             uimenu(menu, 'Text', 'Edit XLabel', ...
                 'MenuSelectedFc', @(varargin) obj.setXLabel());
+            uimenu(menu, 'Text', 'Revert All to Raw', ...
+                'Separator', true, ...
+                'MenuSelectedFc', @(varargin) obj.revertToRaw());
         end
         function menu = groupMenu(obj, parent)
             menu = uimenu(parent, 'Text', 'Group');
