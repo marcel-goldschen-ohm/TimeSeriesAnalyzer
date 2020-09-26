@@ -2977,6 +2977,7 @@ classdef TimeSeriesAnalyzer < handle
             if ~isfield(obj.Data, 'yideal')
                 [obj.Data.yideal] = deal([]);
             end
+            wb = waitbar(0, 'Idealizing...');
             for i = 1:numel(tsIndices)
                 j = tsIndices(i);
                 % get data indices included in idealization
@@ -3023,7 +3024,12 @@ classdef TimeSeriesAnalyzer < handle
 %                 elseif method == "MinStepHeight"
 %                     obj.Data(j).yideal(idx) = aggSmallSteps(obj.Data(j).ydata(idx), obj.Data(j).yideal(idx), params);
                 end
+                % only update waitbar at most 10 times as it is slow
+                if mod(i, ceil(numel(tsIndices) / 10)) == 0
+                    waitbar(double(i) / numel(tsIndices), wb);
+                end
             end
+            close(wb);
             visNames = obj.visibleNames();
             if ~ismember("ideal", visNames)
                 visNames(end+1) = "ideal";
