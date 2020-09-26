@@ -58,7 +58,7 @@ Time series group ID:
 
     Data.group
 
-Associated time series such as idealizations, fits, etc. For compatibility with the viewer the (x,y) data for these signals should have fieldnames with the format `xNAME` and `yNAME`, where `NAME` can be any valid fieldname other than `data` (e.g. `MyData` --> `Data.yMyData`). If `xNAME` does not exist or is empty, it defaults to `xdata`. The UI's View menu allows dynamic selection by `NAME` of which signals to view.
+Associated time series such as idealizations, fits, etc. For compatibility with the viewer the (x,y) data for these signals should have fieldnames with the format `xNAME` and `yNAME`, where `NAME` can be any valid fieldname other than `data` or `label` (e.g. `MyData` --> `Data.yMyData`). If `xNAME` does not exist or is empty, it defaults to `xdata`. The UI's View menu allows dynamic selection by `NAME` of which signals to view.
 
     Data.xNAME
     Data.yNAME
