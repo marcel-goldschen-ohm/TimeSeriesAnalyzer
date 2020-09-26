@@ -200,7 +200,7 @@ Right-click in an axes for a context menu containing commands to fit all display
 
 Right-click on a fit line object for a context menu where you can delete the fit or use it to baseline or normalize the associated `ydata`.
 
-![Fit Menu](images/FitLineContextMenu.png "Fit Menu")
+![Fit Menu](images/FitLineMenu.png "Fit Menu")
 
 ## Data Operations
 Right-click in an axes for a context menu containing commands to mask, zero, interpolate or apply math operations to all displayed signals in that axes. If ROIs are active, only apply the operation within each ROI, otherwise apply it to the entire signal.
