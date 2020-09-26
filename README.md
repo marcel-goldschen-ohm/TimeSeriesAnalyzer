@@ -222,7 +222,6 @@ Right-click in an axes for a context menu containing commands to mask, zero, int
 ## To Do
 
 * Make available as MATLAB Add-On
-* Join Idealization
 * Gaussian Filter
 * Save fit with unique name so it is not overwritten by subsequent fit
 * Import Axon, Axograph

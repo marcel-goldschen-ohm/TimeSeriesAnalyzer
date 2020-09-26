@@ -438,6 +438,7 @@ classdef TimeSeriesAnalyzer < handle
                     obj.Data(j).ydata = y;
                 end
             end
+            obj.replot();
         end
         function revertToRawAllVisibleInAxes(obj, ax)
             tsi = obj.visibleTsInAxes(ax);
@@ -1476,6 +1477,7 @@ classdef TimeSeriesAnalyzer < handle
                     'MenuSelectedFc', @(varargin) obj.idealizeInAxes(methods{k}, ax));
             end
             uimenu(menu, 'Text', 'Join Ideal', ...
+                ...%'Accelerator', 'J', ...
                 'MenuSelectedFc', @(varargin) obj.joinIdeal(ax));
             
             % xrangesMgr ROI
@@ -3096,7 +3098,30 @@ classdef TimeSeriesAnalyzer < handle
         % Set selected portion of idealization to uniform value equal to
         % the first selected idealization point.
         function joinIdeal(obj, ax)
-            ... % TODO
+            if obj.numXROIs() == 0 || ~obj.ui.XROIsButton.Value || ~isfield(obj.Data, 'yideal')
+                return
+            end
+            tsi = obj.visibleTsInAxes(ax);
+            for i = 1:numel(tsi)
+                j = tsi(i);
+                [x,y] = obj.getXY(obj.Data(j), "ideal");
+                if isempty(y) || numel(x) ~= numel(y)
+                    continue
+                end
+                tf = ~isnan(y);
+                if ~any(tf)
+                    continue
+                end
+                x = x(tf);
+                y = y(tf);
+                indPerROI = obj.XROIMgr.xindices(x);
+                for k = 1:numel(indPerROI)
+                    indk = indPerROI{k};
+                    y(indk) = y(indk(1));
+                end
+                obj.Data(j).yideal(tf) = y;
+            end
+            obj.replot();
         end
     end
     
