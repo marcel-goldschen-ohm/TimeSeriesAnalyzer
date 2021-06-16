@@ -2571,15 +2571,21 @@ classdef TimeSeriesAnalyzer < handle
                 x = reshape(xdata(idx), [], 1);
                 y = reshape(ydata(idx), [], 1);
                 
+                % fit over entire trace
+                xfit = xdata;
+                
                 % limit fit range?
                 if exist('xfitlim', 'var') && ~isempty(xfitlim)
-                    xfit = xdata;
-                    xfit(xfit < xfitlim(1)) = [];
-                    xfit(xfit > xfitlim(2)) = [];
+                    datamask = (x >= xfitlim(1)) & (x <= xfitlim(2));
+                    x = x(datamask);
+                    y = y(datamask);
+                    fitmask = (xfit >= xfitlim(1)) & (xfit <= xfitlim(2));
+                    xfit = xfit(fitmask);
                 end
                 
                 % fit based on method
                 if methodOrExpr == "mean"
+                    minmax(x')
                     yfit = cfit(fittype('poly1'), 0, mean(y));
                 elseif methodOrExpr == "line"
                     p = polyfit(x, y, 1);
@@ -2623,6 +2629,31 @@ classdef TimeSeriesAnalyzer < handle
                         disp(err);
                         msgbox("!!! Requires package 'splinefit'. See Add-On Explorer.", ...
                             'splinefit');
+                        return
+                    end
+                elseif methodOrExpr == "captrans"
+                    minmax(x')
+                    minmax(xfit')
+                    try
+                        ft = fittype('a*(1-exp(-(x-b)/c))*(d*exp(-(x-b)/e)+f*exp(-(x-b)/g))*heaviside(x-b)+h');
+                        a = 4 * (max(y) - min(y));
+                        [~,peaki] = max(y);
+                        b = x(peaki);
+                        c = x(3) - x(1);
+                        d = 0.9;
+                        e = c;
+                        f = 0.1;
+                        g = 10 * e;
+                        h = y(1);
+                        options = fitoptions(ft);
+                        options.StartPoint = [a b c d e f g h];
+                        dx = x(2)-x(1);
+                        dxlim = x(end)-x(1);
+                        options.Lower = [0 x(1) dx 0 dx 0 dx min(y)];
+                        options.Upper = [10*a x(peaki) dxlim 10*a dxlim 3*a dxlim max(y)];
+                        yfit = fit(x, y, ft, options);
+                    catch err
+                        disp(err);
                         return
                     end
                 else % e.g. 'a * exp(-x/b)'
@@ -2804,11 +2835,61 @@ classdef TimeSeriesAnalyzer < handle
             obj.replot();
         end
         
+        % Subtract yfit from ydata
+        function subtractCapTrans(obj, hfit)
+            % find plot handle for ydata associated with hfit
+            ax = hfit.Parent;
+            tsi = getappdata(hfit, 'TsIndex');
+            hdata = obj.getPlot(ax, tsi, "data");
+            if isempty(hdata) || ~isvalid(hdata)
+                return
+            end
+            % subtract hfit from hydata
+            [xdata,ydata] = obj.getXYFromPlot(hdata);
+            [xfit,yfit] = obj.getXYFromPlot(hfit);
+            if isequal(xdata, xfit)
+                ydata = ydata - yfit + min(yfit);
+            else
+                try
+                    first = find(xdata >= xfit(1), 1);
+                    last = length(xdata) + 1 - find(xdata(end:-1:1) <= xfit(end), 1);
+                    idx = first:last;
+                    ifit = interp1(xfit, yfit, xdata(idx));
+                    ydata(idx) = ydata(idx) - ifit + min(ifit);
+                catch
+                    return
+                end
+            end
+            yfit(:) = min(yfit);
+            obj.updatePlot(hdata, xdata, ydata);
+            obj.updatePlot(hfit, xfit, yfit);
+            % update histogram
+            i = find(obj.ui.TsAxes == ax, 1);
+            hax = obj.ui.HistAxes(i);
+            hhist = obj.getPlot(hax, tsi, "data");
+            if ~isempty(hhist) && isvalid(hhist)
+                obj.updateHistogram(hhist, ydata);
+            end
+            % ask if we should keep result?
+            if questdlg('Subtract cap trans?', 'Subtract Cap Trans') == "Yes"
+                % update time series data
+                obj.Data(tsi).ydata = ydata;
+                obj.Data(tsi).yfit = [];
+                if isfield(obj.Data, 'xfit')
+                    obj.Data(tsi).xfit = [];
+                end
+            else
+                ax.YLim = ylim;
+                ax.YLimMode = ylimmode;
+            end
+            obj.replot();
+        end
+        
         % menu
         function menu = fitMenu(obj, parent, ax, roi)
             menu = uimenu(parent, 'Text', 'Fit');
             isroi = exist('roi', 'var') && isvalid(roi);
-            methods = {'mean', 'line', 'polynomial', 'spline', 'custom'};
+            methods = {'mean', 'line', 'polynomial', 'spline', 'custom', 'captrans'};
             if isroi
                 xfitlim = cumsum(roi.Position([1 3]));
                 submenu = uimenu(menu, 'Text', 'Fit in ROI');
@@ -2838,6 +2919,9 @@ classdef TimeSeriesAnalyzer < handle
                 'MenuSelectedFc', @(varargin) obj.subtractFit(hfit));
             uimenu(menu, 'Text', 'Normalize to Fit', ...
                 'MenuSelectedFc', @(varargin) obj.normalizeToFit(hfit));
+            uimenu(menu, 'Text', 'Subtract Cap Trans', ...
+                'Separator', true, ...
+                'MenuSelectedFc', @(varargin) obj.subtractCapTrans(hfit));
         end
         
         %------------------------------------------------------------------
