@@ -1,5 +1,5 @@
 classdef TimeSeriesAnalyzer < handle
-    %Flexible and performant time series viewer and analysis tool.
+    % Flexible and performant time series viewer and analysis tool.
     %
     %   -------------------------------------------------------------------
     %   Usage
@@ -164,6 +164,7 @@ classdef TimeSeriesAnalyzer < handle
         But it's up to you to add functionality in the UI for any of it.
         
         %}
+
         % !!! WARNING !!! You should use setData() to set this unless you
         %                 know what you are doing.
         Data = struct('xdata', [], 'ydata', [], 'xlabel', "", 'ylabel', "");
@@ -324,8 +325,10 @@ classdef TimeSeriesAnalyzer < handle
             if ~isfield(obj.Data, 'ylabel')
                 [obj.Data.ylabel] = deal("");
             end
-            % group by ylabel
-            obj.setGroups(obj.groupsByYLabel());
+            % group by ylabel if group not specified
+            if ~isstruct(data) || ~isfield(obj.Data, 'group')
+                obj.setGroups(obj.groupsByYLabel());
+            end
             % copy of original raw data
             if ~isfield(obj.Data, 'yraw')
                 [obj.Data.yraw] = deal([]);
@@ -358,6 +361,7 @@ classdef TimeSeriesAnalyzer < handle
         end
         
         % get (x,y) values for named time series in data struct
+        % !!! This is the safest way to always access time series data.
         function [x,y] = getXY(obj, data, name)
             if ~exist('name', 'var')
                 name = "data";
@@ -378,6 +382,18 @@ classdef TimeSeriesAnalyzer < handle
             elseif isstruct(y)
                 if isfield(y, 'form') && y.form == "pp"
                     y = ppval(y, x);
+                end
+            end
+            if name == "data"
+                if isfield(data, 'ybaseline') && ~isempty(data.ybaseline) && obj.applyBaseline()
+                    y = y - data.ybaseline;
+                end
+                if isfield(data, 'yscale') && ~isempty(data.yscale) && obj.applyScale()
+                    y = y .* data.yscale;
+                end
+            elseif name == "baseline"
+                if isfield(data, 'ybaseline') && ~isempty(data.ybaseline) && obj.applyBaseline()
+                    y(:) = 0;
                 end
             end
         end
@@ -445,6 +461,58 @@ classdef TimeSeriesAnalyzer < handle
             obj.revertToRaw(tsi);
         end
         
+        % Baseline and scale of ydata
+        function tf = isBaseline(obj)
+            tf = isfield(obj.Data, 'ybaseline');
+        end
+        function tf = isScale(obj)
+            tf = isfield(obj.Data, 'yscale');
+        end
+        function ybaseline = getBaseline(obj, tsi)
+            if isfield(obj.Data, 'ybaseline')
+                ybaseline = obj.Data(tsi).ybaseline;
+            else
+                ybaseline = 0;
+            end
+        end
+        function yscale = getScale(obj, tsi)
+            if isfield(obj.Data, 'yscale')
+                yscale = obj.Data(tsi).yscale;
+            else
+                yscale = 1;
+            end
+        end
+        function tf = applyBaseline(obj)
+            tf = obj.ui.ApplyBaselineButton.Value;
+        end
+        function tf = applyScale(obj)
+            tf = obj.ui.ApplyScaleButton.Value;
+        end
+        function onApplyBaselineButtonChanged(obj)
+            obj.replot();
+        end
+        function onApplyScaleButtonChanged(obj)
+            obj.replot();
+        end
+
+        % Clean up unused data
+        function cleanUpData(obj)
+            fields = fieldnames(obj.Data);
+            for col = 1:length(fields)
+                field = fields{col};
+                hasField = false;
+                for row = 1:length(obj.Data)
+                    if ~isempty(obj.Data(row).(field))
+                        hasField = true;
+                        break
+                    end
+                end
+                if ~hasField
+                    obj.Data = rmfield(obj.Data, field);
+                end
+            end
+        end
+
         %------------------------------------------------------------------
         % File I/O
         %------------------------------------------------------------------
@@ -1001,7 +1069,7 @@ classdef TimeSeriesAnalyzer < handle
             end
             
             % ends with: fit, baseline
-            last = ["fit", "baseline"];
+            last = ["fit", "baseline", "scale"];
             for i = 1:numel(last)
                 if ismember(last(i), names)
                     names = [names(names ~= last(i)) last(i)];
@@ -1025,6 +1093,11 @@ classdef TimeSeriesAnalyzer < handle
             else
                 names = intersect(obj.VisibleNames, obj.names(), 'stable');
             end
+        end
+        function addVisibleName(obj, name)
+            names = obj.visibleNames();
+            names(end+1) = name;
+            obj.setVisibleNames(names);
         end
         
         % Create listbox for user selection of visible names
@@ -1685,6 +1758,148 @@ classdef TimeSeriesAnalyzer < handle
             end
         end
         
+        % Plot object context menu
+        function menu = plotContextMenu(obj, hplot)
+            menu = uicontextmenu(obj.ui.Figure);
+            name = char(getappdata(hplot, 'TsName'));
+            if name ~= "data"
+                uimenu(menu, 'Text', ['Delete ' name], ...
+                    'MenuSelectedFc', @(varargin) obj.deletePlot(hplot));
+                uimenu(menu, 'Text', ['Rename ' name], 'Separator', true, ...
+                    'MenuSelectedFc', @(varargin) obj.renamePlot(hplot));
+                uimenu(menu, 'Text', ['Normalize ' name], 'Separator', true, ...
+                    'MenuSelectedFc', @(varargin) obj.normalizePlot(hplot));
+            end
+            if name == "scale"
+                uimenu(menu, 'Text', 'Set to scale that would normalize itself', 'Separator', true, ...
+                    'MenuSelectedFc', @(varargin) obj.setPlotToThatWhichNormalizesItself(hplot));
+            end
+%             uimenu(menu, 'Text', ['Set plot style for ' name], 'Separator', true, ...
+%                 'MenuSelectedFc', @(varargin) obj.setPlotStyle(hplot));
+        end
+
+        % Delete plot
+        function deletePlot(obj, hplot)
+            tsi = getappdata(hplot, 'TsIndex');
+            name = getappdata(hplot, 'TsName');
+            if isfield(obj.Data, "x" + name)
+                obj.Data(tsi).("x" + name) = [];
+            end
+            if isfield(obj.Data, "y" + name)
+                obj.Data(tsi).("y" + name) = [];
+            end
+            obj.cleanUpData();
+            obj.replot();
+        end
+
+        % Rename plot
+        function renamePlot(obj, hplot)
+            oldname = char(getappdata(hplot, 'TsName'));
+            answer = inputdlg({'Name'}, 'Rename Plot', 1, {oldname});
+            if isempty(answer)
+                return
+            end
+            newname = char(strip(answer{1}));
+            if isempty(newname)
+                return
+            end
+            xnewname = ['x' newname];
+            ynewname = ['y' newname];
+            tsi = getappdata(hplot, 'TsIndex');
+            [x,y] = obj.getXYFromPlot(hplot);
+            if ~isequal(x, obj.Data(tsi).xdata)
+                if ~isfield(obj.Data, xnewname)
+                    [obj.Data.(xnewname)] = deal([]);
+                end
+                obj.Data(tsi).(xnewname) = x;
+            end
+            if ~isfield(obj.Data, ynewname)
+                [obj.Data.(ynewname)] = deal([]);
+            end
+            obj.Data(tsi).(ynewname) = y;
+            obj.Data(tsi).(['x' oldname]) = [];
+            obj.Data(tsi).(['y' oldname]) = [];
+            obj.cleanUpData();
+            visNames = obj.visibleNames();
+            if ~any(ismember(string(newname), visNames))
+                obj.addVisibleName(string(newname));
+%               obj.replot(); % called by addVisibleName
+            else
+                obj.replot();
+            end
+        end
+        
+        % Normalize plot
+        function normalizePlot(obj, hplot)
+            ax = hplot.Parent;
+            tsi = getappdata(hplot, 'TsIndex');
+            hdata = obj.getPlot(ax, tsi, "data");
+            if isempty(hdata) || ~isvalid(hdata)
+                return
+            end
+            [x,y] = obj.getXYFromPlot(hplot);
+            y = y ./ max(y);
+            ylim = ax.YLim;
+            ylimmode = ax.YLimMode;
+            ymin = min(y);
+            ymax = max(y);
+            yrange = ymax - ymin;
+            ax.YLim = [ymin - 0.1 * yrange, ymax + 0.1 * yrange];
+            obj.updatePlot(hplot, x, y);
+            % update histogram
+            i = find(obj.ui.TsAxes == ax, 1);
+            hax = obj.ui.HistAxes(i);
+            hhist = obj.getPlot(hax, tsi, "data");
+            if ~isempty(hhist) && isvalid(hhist)
+                obj.updateHistogram(hhist, y);
+            end
+            % ask if we should keep result?
+            if questdlg('Apply normalization?', 'Normalize') == "Yes"
+                % update time series data
+                obj.updateDataFromPlot(hplot);
+            else
+                ax.YLim = ylim;
+                ax.YLimMode = ylimmode;
+            end
+            obj.replot();
+        end
+
+        % Invert plot
+        function setPlotToThatWhichNormalizesItself(obj, hplot)
+            ax = hplot.Parent;
+            tsi = getappdata(hplot, 'TsIndex');
+            hdata = obj.getPlot(ax, tsi, "data");
+            if isempty(hdata) || ~isvalid(hdata)
+                return
+            end
+            [x,y] = obj.getXYFromPlot(hplot);
+            y = y / max(y);
+            y = 2 - y;
+            ylim = ax.YLim;
+            ylimmode = ax.YLimMode;
+            ymin = min(y);
+            ymax = max(y);
+            yrange = ymax - ymin;
+            ax.YLim = [ymin - 0.1 * yrange, ymax + 0.1 * yrange];
+            obj.updatePlot(hplot, x, y);
+            % update histogram
+            i = find(obj.ui.TsAxes == ax, 1);
+            hax = obj.ui.HistAxes(i);
+            hhist = obj.getPlot(hax, tsi, "data");
+            if ~isempty(hhist) && isvalid(hhist)
+                obj.updateHistogram(hhist, y);
+            end
+            % ask if we should keep result?
+            if questdlg('Apply rescaling?', 'Rescale') == "Yes"
+                % update time series data
+                obj.updateDataFromPlot(hplot);
+            else
+                ax.YLim = ylim;
+                ax.YLimMode = ylimmode;
+            end
+            obj.replot();
+        end
+        
         %------------------------------------------------------------------
         % Histograms
         %------------------------------------------------------------------
@@ -1890,7 +2105,7 @@ classdef TimeSeriesAnalyzer < handle
                 'Units', 'pixels', ...
                 'Position', [x 1 22 22], ...
                 'Callback', @(varargin) obj.pageRight());
-            x = x + 33;
+            x = x + 32;
             
             obj.ui.XROIsButton = uicontrol(panel, ...
                 'Style', 'togglebutton', ...
@@ -1904,7 +2119,23 @@ classdef TimeSeriesAnalyzer < handle
                     @(varargin) obj.updateXROIsButton());
                 setappdata(obj.ui.XROIsButton, 'NumberOfROIsChangedListener', h);
             end
-            x = x + 32;
+            x = x + 23;
+            obj.ui.ApplyBaselineButton = uicontrol(panel, ...
+                'Style', 'togglebutton', ...
+                'String', 'baseline', ...
+                'Tooltip', 'Subtract ybaseline', ...
+                'Units', 'pixels', ...
+                'Position', [x 1 42 22], ...
+                'Callback', @(varargin) obj.onApplyBaselineButtonChanged());
+            x = x + 43;
+            obj.ui.ApplyScaleButton = uicontrol(panel, ...
+                'Style', 'togglebutton', ...
+                'String', 'scale', ...
+                'Tooltip', 'Multiply by yscale', ...
+                'Units', 'pixels', ...
+                'Position', [x 1 32 22], ...
+                'Callback', @(varargin) obj.onApplyScaleButtonChanged());
+            x = x + 42;
             
             warning('off', 'MATLAB:structOnObject');
             [tb, btns] = axtoolbar(obj.ui.HistAxes(1), {'brush', 'pan', 'zoomin', 'zoomout', 'restoreview'});
@@ -2017,11 +2248,15 @@ classdef TimeSeriesAnalyzer < handle
             
             if obj.hasXROIMgr()
                 obj.ui.XROIsButton.Position(1) = x;
-                x = x + obj.ui.XROIsButton.Position(3) + 10;
+                x = x + obj.ui.XROIsButton.Position(3) + 1;
                 obj.ui.XROIsButton.Visible = true;
             else
                 obj.ui.XROIsButton.Visible = false;
             end
+            obj.ui.ApplyBaselineButton.Position(1) = x;
+            x = x + obj.ui.ApplyBaselineButton.Position(3) + 1;
+            obj.ui.ApplyScaleButton.Position(1) = x;
+            x = x + obj.ui.ApplyScaleButton.Position(3) + 10;
             
             obj.ui.BrushButton.Visible = false;
 %             obj.ui.BrushButton.Position(1) = x;
@@ -2176,7 +2411,6 @@ classdef TimeSeriesAnalyzer < handle
                     nts = 0;
                 end
                 hidx = 1;
-                fitind = [];
                 % time series
                 for j = 1:nts
                     ts = obj.Data(tsi(j));
@@ -2186,45 +2420,41 @@ classdef TimeSeriesAnalyzer < handle
                         if isempty(y)
                             continue
                         end
-                        if ~isnumeric(y) || obj.isideal(y)
-                            ls = '-';
-                            lw = 1.5;
-                        else
-                            ls = get(groot, 'defaultLineLineStyle');
-                            lw = get(groot, 'defaultLineLineWidth');
-                        end
                         [x,y] = obj.getXY(ts, name);
                         if hidx > numel(hplots)
                             h = obj.createPlot(ax, x, y);
                         else
                             h = obj.updatePlot(hplots(hidx), x, y);
                         end
-                        if name == "fit"
-                            fitind = [fitind hidx];
-                            h.Color = 'r';
-                            h.LineStyle = '-';
-                            h.LineWidth = 1.5;
-                            h.ContextMenu = obj.fitContextMenu(h);
-                            h.HitTest = 'on';
-                            h.PickableParts = 'visible';
+                        setappdata(h, 'TsIndex', tsi(j));
+                        setappdata(h, 'TsName', name);
+%                         if ~isnumeric(y) || obj.isideal(y)
+%                             colorIndex = find(names == name, 1);
+%                             h.Color = cmap(colorIndex,:);
+%                             h.LineStyle = '-';
+%                             h.LineWidth = 1.5;
+                        if any(ismember(name, ["baseline", "scale"]))
+                            h.Color = [0 0 0];
+                            h.LineStyle = '--';
+                            h.LineWidth = 1;
                         else
                             colorIndex = find(names == name, 1);
                             h.Color = cmap(colorIndex,:);
-                            h.LineStyle = ls;
-                            h.LineWidth = lw;
+                            h.LineStyle = get(groot, 'defaultLineLineStyle');
+                            h.LineWidth = get(groot, 'defaultLineLineWidth');
+                        end
+                        if any(ismember(name, ["raw", "data"]))
                             delete(h.ContextMenu);
                             h.HitTest = 'off';
                             h.PickableParts = 'none';
+                        else
+                            h.ContextMenu = obj.plotContextMenu(h);
+                            h.HitTest = 'on';
+                            h.PickableParts = 'visible';
                         end
-                        setappdata(h, 'TsIndex', tsi(j));
-                        setappdata(h, 'TsName', name);
                         hplots(hidx) = h;
                         hidx = hidx + 1;
                     end
-                end
-                % fits on top
-                if ~isempty(fitind)
-                    uistack(hplots(fitind), 'top');
                 end
                 % get rid of extra plot handles
                 delete(hplots(hidx:end));
@@ -2522,7 +2752,7 @@ classdef TimeSeriesAnalyzer < handle
         %------------------------------------------------------------------
         
         % Curve fit plot objects
-        function curveFit(obj, hplotsOrAxes, methodOrExpr, params, lowerbound, upperbound, xfitlim)
+        function curveFit(obj, hplotsOrAxes, methodOrExpr, params, lowerbound, upperbound, xfitlim, fitname)
             if class(hplotsOrAxes) == "matlab.graphics.axis.Axes"
                 ax = hplotsOrAxes;
                 hplots = gobjects(0);
@@ -2544,13 +2774,29 @@ classdef TimeSeriesAnalyzer < handle
             % input method or expression if not given
             if ~exist('methodOrExpr', 'var') || isempty(methodOrExpr) || methodOrExpr == "custom"
                 answer = inputdlg({'Expression '}, 'Curve Fit', 1, {'a*exp(-x/b)+c'});
-                if isempty(answer) || isempty(answer{1})
+                if isempty(answer)
                     return
                 end
-                methodOrExpr = answer{1};
+                methodOrExpr = strip(answer{1});
+                if isempty(methodOrExpr)
+                    return
+                end
+            end
+
+            if ~exist('fitname', 'var') || isempty(fitname)
+                fitname = 'fit';
+%                 answer = inputdlg({'Name (must be valid struct fieldname)'}, 'Fit Name', 1, {'fit'});
+%                 if isempty(answer)
+%                     return
+%                 end
+%                 fitname = strip(answer{1});
+%                 if isempty(fitname)
+%                     return
+%                 end
             end
             
             % fit each plot in h
+            newNames = [];
             for i = 1:numel(hplots)
                 % get plot data
                 [xdata,ydata] = obj.getXYFromPlot(hplots(i));
@@ -2585,11 +2831,15 @@ classdef TimeSeriesAnalyzer < handle
                 
                 % fit based on method
                 if methodOrExpr == "mean"
-                    minmax(x')
-                    yfit = cfit(fittype('poly1'), 0, mean(y));
+                    yfit = zeros(size(xfit));
+                    yfit(:) = mean(y);
+%                     yfit = cfit(fittype('poly1'), 0, mean(y));
+%                     yfit = yfit(xfit); % cfit --> data
                 elseif methodOrExpr == "line"
                     p = polyfit(x, y, 1);
-                    yfit = cfit(fittype('poly1'), p(1), p(2));
+                    yfit = polyval(p, xfit);
+%                     yfit = cfit(fittype('poly1'), p(1), p(2));
+%                     yfit = yfit(xfit); % cfit --> data
                 elseif methodOrExpr == "polynomial"
                     if ~exist('params', 'var') || isempty(params)
                         answer = inputdlg({'Polynomial Order '}, 'Polynomial Fit', 1);
@@ -2610,8 +2860,9 @@ classdef TimeSeriesAnalyzer < handle
                         end
                     end
                     p = mat2cell(p, ones(1,size(p,1)), ones(1,size(p,2)));
-    %                 yfit = polyval(p, x);
-                    yfit = cfit(fittype(lm), p{:});
+                    yfit = polyval(p, xfit);
+%                     yfit = cfit(fittype(lm), p{:});
+%                     yfit = yfit(xfit); % cfit --> data
                 elseif methodOrExpr == "spline"
                     if ~exist('params', 'var') || isempty(params)
                         answer = inputdlg({'# of Spline Segments '}, 'Spline Fit', 1);
@@ -2623,8 +2874,8 @@ classdef TimeSeriesAnalyzer < handle
                     try
                         numSegments = params;
                         pp = splinefit(x, y, numSegments);
-    %                     yfit = ppval(pp, x);
-                        yfit = pp;
+                        yfit = ppval(pp, xfit);
+%                         yfit = pp;
                     catch err
                         disp(err);
                         msgbox("!!! Requires package 'splinefit'. See Add-On Explorer.", ...
@@ -2652,6 +2903,7 @@ classdef TimeSeriesAnalyzer < handle
                         options.Lower = [0 x(1) dx 0 dx 0 dx min(y)];
                         options.Upper = [10*a x(peaki) dxlim 10*a dxlim 3*a dxlim max(y)];
                         yfit = fit(x, y, ft, options);
+                        yfit = yfit(xfit);
                     catch err
                         disp(err);
                         return
@@ -2682,6 +2934,7 @@ classdef TimeSeriesAnalyzer < handle
                             options.Upper = upperbound;
                         end
                         yfit = fit(x, y, ft, options);
+                        yfit = yfit(xfit); % cfit --> numeric
                     catch err
                         disp(err);
                         return
@@ -2690,12 +2943,21 @@ classdef TimeSeriesAnalyzer < handle
                 
                 % add fit to time series data
                 if ~isempty(yfit)
-                    if ~isfield(obj.Data, 'yfit')
-                        [obj.Data.yfit] = deal([]);
-                    end
                     tsi = getappdata(hplots(i), 'TsIndex');
-                    obj.Data(tsi).xfit = xfit;
-                    obj.Data(tsi).yfit = yfit;
+                    name = getappdata(hplots(i), 'TsName');
+                    newNames = [newNames string([char(name) '_' fitname])];
+                    xname = ['x' char(name) '_' char(fitname)];
+                    yname = ['y' char(name) '_' char(fitname)];
+                    if ~isequal(xfit, obj.Data(tsi).xdata)
+                        if ~isfield(obj.Data, xname)
+                            [obj.Data.(xname)] = deal([]);
+                        end
+                        obj.Data(tsi).(xname) = xfit;
+                    end
+                    if ~isfield(obj.Data, yname)
+                        [obj.Data.(yname)] = deal([]);
+                    end
+                    obj.Data(tsi).(yname) = yfit;
                     if ~isnumeric(yfit)
                         disp(yfit); % print fit result
                     end
@@ -2704,15 +2966,17 @@ classdef TimeSeriesAnalyzer < handle
                 
             % show fits
             visNames = obj.visibleNames();
-            if ~ismember("fit", visNames)
-                visNames(end+1) = "fit";
-                obj.setVisibleNames(visNames);
+            for j = 1:length(newNames)
+                if ~ismember(newNames(j), visNames)
+                    visNames(end+1) = newNames(j);
+                end
             end
+            obj.setVisibleNames(visNames);
             obj.replot();
         end
         
         % Delete fit for time series indices tsind
-        function deleteFit(obj, hfit)
+        function UNUSED_deleteFit(obj, hfit)
             tsi = getappdata(hfit, 'TsIndex');
             if isfield(obj.Data, 'xfit')
                 obj.Data(tsi).xfit = [];
@@ -2723,16 +2987,44 @@ classdef TimeSeriesAnalyzer < handle
             obj.replot();
         end
         
-        % Delete fit for time series indices tsind
-        function printFitParams(obj, hfit)
+        % Print fit params for time series indices tsind
+        function UNUSED_printFitParams(obj, hfit)
             tsi = getappdata(hfit, 'TsIndex');
             if isfield(obj.Data, 'yfit') && ~isnumeric(obj.Data(tsi).yfit)
                 obj.Data(tsi).yfit
             end
         end
         
+        % Rename fit for time series indices tsind
+        function UNUSED_renameFit(obj, hfit)
+            answer = inputdlg({'Name'}, 'Rename Fit', 1);
+            if isempty(answer)
+                return
+            end
+            name = char(strip(answer{1}));
+            if isempty(name)
+                return
+            end
+            xname = ['x' name];
+            yname = ['y' name];
+            tsi = getappdata(hfit, 'TsIndex');
+            [xfit,yfit] = obj.getXYFromPlot(hfit);
+            if ~isfield(obj.Data, xname)
+                [obj.Data.(xname)] = deal([]);
+            end
+            if ~isfield(obj.Data, yname)
+                [obj.Data.(yname)] = deal([]);
+            end
+            obj.Data(tsi).(xname) = xfit;
+            obj.Data(tsi).(yname) = yfit;
+            obj.Data(tsi).xfit = [];
+            obj.Data(tsi).yfit = [];
+            obj.addVisibleName(string(name));
+%             obj.replot(); % called by addVisibleName
+        end
+        
         % Subtract yfit from ydata
-        function subtractFit(obj, hfit)
+        function UNUSED_subtractFit(obj, hfit)
             % find plot handle for ydata associated with hfit
             ax = hfit.Parent;
             tsi = getappdata(hfit, 'TsIndex');
@@ -2772,10 +3064,10 @@ classdef TimeSeriesAnalyzer < handle
             if questdlg('Subtract fit?', 'Subtract Fit') == "Yes"
                 % update time series data
                 obj.Data(tsi).ydata = ydata;
-                obj.Data(tsi).yfit = [];
-                if isfield(obj.Data, 'xfit')
-                    obj.Data(tsi).xfit = [];
-                end
+%                 obj.Data(tsi).yfit = [];
+%                 if isfield(obj.Data, 'xfit')
+%                     obj.Data(tsi).xfit = [];
+%                 end
             else
                 ax.YLim = ylim;
                 ax.YLimMode = ylimmode;
@@ -2784,7 +3076,7 @@ classdef TimeSeriesAnalyzer < handle
         end
         
         % Normalize data to fit for time series indices tsind
-        function normalizeToFit(obj, hfit)
+        function UNUSED_normalizeToFit(obj, hfit)
             % find plot handle for ydata associated with hfit
             ax = hfit.Parent;
             tsi = getappdata(hfit, 'TsIndex');
@@ -2824,10 +3116,10 @@ classdef TimeSeriesAnalyzer < handle
             if questdlg('Normalize to fit?', 'Normalize to Fit') == "Yes"
                 % update time series data
                 obj.Data(tsi).ydata = ydata;
-                obj.Data(tsi).yfit = [];
-                if isfield(obj.Data, 'xfit')
-                    obj.Data(tsi).xfit = [];
-                end
+%                 obj.Data(tsi).yfit = [];
+%                 if isfield(obj.Data, 'xfit')
+%                     obj.Data(tsi).xfit = [];
+%                 end
             else
                 ax.YLim = ylim;
                 ax.YLimMode = ylimmode;
@@ -2836,7 +3128,7 @@ classdef TimeSeriesAnalyzer < handle
         end
         
         % Subtract yfit from ydata
-        function subtractCapTrans(obj, hfit)
+        function KEEP_FOR_LATER_subtractCapTrans(obj, hfit)
             % find plot handle for ydata associated with hfit
             ax = hfit.Parent;
             tsi = getappdata(hfit, 'TsIndex');
@@ -2907,13 +3199,15 @@ classdef TimeSeriesAnalyzer < handle
         end
         
         % Fit plot object context menu
-        function menu = fitContextMenu(obj, hfit)
+        function menu = UNUSED_fitContextMenu(obj, hfit)
             menu = uicontextmenu(obj.ui.Figure);
             uimenu(menu, 'Text', 'Delete Fit', ...
                 'MenuSelectedFc', @(varargin) obj.deleteFit(hfit));
             uimenu(menu, 'Text', 'Print Fit Parameters', ...
                 'Separator', true, ...
                 'MenuSelectedFc', @(varargin) obj.printFitParams(hfit));
+            uimenu(menu, 'Text', 'Rename Fit', ...
+                'MenuSelectedFc', @(varargin) obj.renameFit(hfit));
             uimenu(menu, 'Text', 'Subtract Fit', ...
                 'Separator', true, ...
                 'MenuSelectedFc', @(varargin) obj.subtractFit(hfit));
@@ -3210,16 +3504,16 @@ classdef TimeSeriesAnalyzer < handle
     end
     
     methods (Static)
-        function tsa = mytest()
-            tsa = TimeSeriesAnalyzer();
-            tmp = load('test_traces.mat');
-            tsa.setData(tmp.data);
-            for i = 1:numel(tsa.Data)
-                tsa.Data(i).yraw = tsa.Data(i).yraw - 10;
-                tsa.Data(i).yideal = repmat(mean(tsa.Data(i).ydata), size(tsa.Data(i).ydata));
-            end
-            tsa.groupEveryN(3);
-        end
+%         function tsa = mytest()
+%             tsa = TimeSeriesAnalyzer();
+%             tmp = load('test_traces.mat');
+%             tsa.setData(tmp.data);
+%             for i = 1:numel(tsa.Data)
+%                 tsa.Data(i).yraw = tsa.Data(i).yraw - 10;
+%                 tsa.Data(i).yideal = repmat(mean(tsa.Data(i).ydata), size(tsa.Data(i).ydata));
+%             end
+%             tsa.groupEveryN(3);
+%         end
         function tsa = test()
             tsa = TimeSeriesAnalyzer();
             data = {};

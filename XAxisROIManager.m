@@ -1,7 +1,7 @@
 classdef XAxisROIManager < handle
     % Manage, display and interact with a set of x-axis range ROIs.
     %
-    % An ROI is a range in the x-axis, e.g. [xmin xmax]
+    % A ROI is a range in the x-axis, e.g. [xmin xmax]
     % ROIs are depicted graphically as interactive Rectangles that shade
     % the selected ranges in the plot axes.
     %
@@ -19,7 +19,7 @@ classdef XAxisROIManager < handle
     %
     % ROIs provide a context menu for interactions.
     % You can customize the context menu for your needs.
-    % .ROIs(...).UIContextMenu = ...
+    % .ROIs(i).UIContextMenu = ...
     
     properties
         % List of plot axes in which ROIs should be displayed and managed.
