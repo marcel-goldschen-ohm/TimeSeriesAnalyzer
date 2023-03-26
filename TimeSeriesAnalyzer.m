@@ -1819,6 +1819,10 @@ classdef TimeSeriesAnalyzer < handle
             obj.Data(tsi).(ynewname) = y;
             obj.Data(tsi).(['x' oldname]) = [];
             obj.Data(tsi).(['y' oldname]) = [];
+            if isfield(obj.Data(tsi), ['style' oldname])
+                obj.Data(tsi).(['style' char(newname)]) = obj.Data(tsi).(['style' oldname]);
+                obj.Data(tsi).(['style' oldname]) = [];
+            end
             obj.cleanUpData();
             visNames = obj.visibleNames();
             if ~any(ismember(string(newname), visNames))
@@ -2443,6 +2447,13 @@ classdef TimeSeriesAnalyzer < handle
                             h.LineStyle = get(groot, 'defaultLineLineStyle');
                             h.LineWidth = get(groot, 'defaultLineLineWidth');
                         end
+                        clear style;
+                        if isfield(ts, "style" + name)
+                            style = ts.("style" + name);
+                        end
+                        if exist('style', 'var') && isstruct(style)
+                            set(h, style);
+                        end
                         if any(ismember(name, ["raw", "data"]))
                             delete(h.ContextMenu);
                             h.HitTest = 'off';
@@ -2735,6 +2746,41 @@ classdef TimeSeriesAnalyzer < handle
             drawnow;
             pause(2);
             delete(htmp);
+%             if exist('plotMeasure', 'var') && plotMeasure
+                try
+                    tsi = unique(obj.Measurement.Index);
+                catch
+                    tsi = 1;
+                end
+                for i = 1:length(tsi)
+                    try
+                        rows = find(obj.Measurement.Index == tsi(i));
+                    catch
+                        rows = 1:length(obj.Data);
+                    end
+                    xi = x(rows);
+                    yi = y(rows);
+                    namei = string(obj.Measurement.Name(rows(1))) + "_" + string(method);
+                    if ~isfield(obj.Data, "x" + namei)
+                        [obj.Data.("x" + namei)] = deal([]);
+                    end
+                    if ~isfield(obj.Data, "y" + namei)
+                        [obj.Data.("y" + namei)] = deal([]);
+                    end
+                    obj.Data(tsi(i)).("x" + namei) = xi;
+                    obj.Data(tsi(i)).("y" + namei) = yi;
+                    style.linestyle = 'none';
+                    style.marker = 'o';
+                    style.linewidth = 1.5;
+                    obj.Data(tsi(i)).("style" + namei) = style;
+                    visNames = obj.visibleNames();
+                    if ~any(ismember(namei, visNames))
+                        visNames(end+1) = namei;
+                        obj.setVisibleNames(visNames);
+                    end
+                end
+                obj.replot();
+%             end
         end
         
         % menu
@@ -2958,6 +3004,14 @@ classdef TimeSeriesAnalyzer < handle
                         [obj.Data.(yname)] = deal([]);
                     end
                     obj.Data(tsi).(yname) = yfit;
+                    style.linestyle = '-';
+                    style.linewidth = 1.5;
+                    style.marker = 'none';
+                    stylename = ['style' char(name) '_' char(fitname)];
+                    if ~isfield(obj.Data, stylename)
+                        [obj.Data.(stylename)] = deal([]);
+                    end
+                    obj.Data(tsi).(stylename) = style;
                     if ~isnumeric(yfit)
                         disp(yfit); % print fit result
                     end
