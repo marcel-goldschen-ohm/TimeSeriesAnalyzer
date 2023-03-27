@@ -618,8 +618,8 @@ classdef TimeSeriesAnalyzer < handle
                 for s = 1:numSweeps
                     for c = 1:numChannels
                         t = t + 1;
-                        data(t).xdata = recdata{rec}.TrXInterval;
                         data(t).ydata = heka.RecTable.dataRaw{rec}{c}(:,s);
+                        data(t).xdata = (0:(length(data(t).ydata)-1)) .* recdata{rec}.TrXInterval;
                         data(t).xlabel = "Time, " + string(heka.RecTable.TimeUnit{rec}{c});
                         data(t).ylabel = string(heka.RecTable.ChName{rec}{c}) + ", " + string(heka.RecTable.ChUnit{rec}{c});
                     end
