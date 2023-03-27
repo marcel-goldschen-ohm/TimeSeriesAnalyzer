@@ -619,7 +619,7 @@ classdef TimeSeriesAnalyzer < handle
                     for c = 1:numChannels
                         t = t + 1;
                         data(t).ydata = heka.RecTable.dataRaw{rec}{c}(:,s);
-                        data(t).xdata = (0:(length(data(t).ydata)-1)) .* recdata{rec}.TrXInterval;
+                        data(t).xdata = (0:(length(data(t).ydata)-1))' .* recdata{rec}.TrXInterval;
                         data(t).xlabel = "Time, " + string(heka.RecTable.TimeUnit{rec}{c});
                         data(t).ylabel = string(heka.RecTable.ChName{rec}{c}) + ", " + string(heka.RecTable.ChUnit{rec}{c});
                     end
@@ -2756,7 +2756,7 @@ classdef TimeSeriesAnalyzer < handle
                     try
                         rows = find(obj.Measurement.Index == tsi(i));
                     catch
-                        rows = 1:length(obj.Data);
+                        rows = 1:length(obj.Measurement.Name);
                     end
                     xi = x(rows);
                     yi = y(rows);
